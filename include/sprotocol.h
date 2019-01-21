@@ -8,7 +8,8 @@
 #ifndef SPROTOCOL_H_
 #define SPROTOCOL_H_
 
-#include<cstdint>
+#include <cstdint>
+
 // ---------------- serial protocol -------------------
 
 #define MC_PROTO_HEADER_SIZE 4

@@ -1,3 +1,6 @@
+/** !!!!!!!!!!!!!!!!!!!!!
+ * before cmake this exe file, disable printf lines in sprotocol.cpp
+	!!!!!!!!!!!!!!!!!!!!!**/
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -25,6 +28,7 @@ struct pan_tilt_ctrl pt_ctrl = {
 	.pan_neck = 1500,
 	.tilt_neck = 1450
 };
+extern struct h2l_state_pan_tilt* state_msg;
 
 void calibrate_ctl_pos(){
 	// change servo
@@ -74,7 +78,18 @@ int main(int argc, char const *argv[])
 
 	while(pt_ctrl.tilt_right < 2000){ // change servo
 		calibrate_ctl_pos();
-		usleep(10000);
+		cout<<"\n[rx] ts="<<state_msg->timestamp;
+		//<<"\n, pan_left_ctl=" <<msg->pan_left
+		//<<"\n tilt_left_ctl=" <<msg->tilt_left
+		//<<"\n pan_right_ctl=" <<msg->pan_right
+		//<<"\n tilt_right_ctl="  <<msg->tilt_right
+		//<<"\n, pan_neck_ctl="  <<msg->pan_neck
+		//<<"\n, pan_left_pos="<<msg->pan_left_pos;
+		//<<"\n tilt_left_pos=" <<msg->tilt_left_pos;
+		//<<"\n pan_right_pos=" <<msg->pan_right_pos;
+		//<<"\n tilt_right_pos="<<msg->tilt_right_pos;
+		//<<", pan_neck_pos="  <<msg->pan_neck_pos<<"\n";
+		usleep(100000);
 	}
 
     pthread_join(tx_serial, NULL);

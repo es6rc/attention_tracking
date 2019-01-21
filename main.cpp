@@ -41,13 +41,15 @@ std::cout << "Error: " << stream << std::endl
 
 struct pan_tilt_ctrl pt_ctrl = {
 
-		.pan_left = 1480,
+		.pan_left = 1500,
 		.tilt_left = 1500,
 		.pan_right = 1450,
 		.tilt_right = 1500,
-		.pan_neck = 1500,
+		.pan_neck = 1520,
 		.tilt_neck = 1450
 };
+extern struct h2l_state_pan_tilt* state_msg;
+
 int stop_serial_tx = 0;
 int stop_serial_rx = 0;
 int stop_js = 0;
@@ -81,7 +83,11 @@ void vergence_servo_ctrl( float *q ){
         // // printf("pan_right: %d\n", pt_ctrl.pan_right );
         // pt_ctrl.tilt_left += out_tilt;
         // pt_ctrl.tilt_right += out_tilt;
-        pt_ctrl.pan_neck = 1500 + q[0] * rad2pwm;
+		int neck_pan = (int) 1500 + q[0] * rad2pwm;
+		if(neck_pan >= 1600) pt_ctrl.pan_neck = 1600;
+		else if (neck_pan <= 1400) pt_ctrl.pan_neck = 1400;
+		else  pt_ctrl.pan_neck = neck_pan;
+
         pt_ctrl.pan_left = 1480 - q[1] * rad2pwm;
         pt_ctrl.pan_right= 1450 + q[1] * rad2pwm;
         pt_ctrl.tilt_left= 1500 - q[2] * rad2pwm;
@@ -89,12 +95,42 @@ void vergence_servo_ctrl( float *q ){
 
 	}
 }
-cv::Mat_<float> getT1L(pan_tilt_ctrl pt_ctrl){
+/*
+pan_neck:
+#ctl    1250 : 1800
+#pos     192 : 277 
+#ang     -80 : 90 
+
+pan_left:
+#ctl    1000 : 2000     
+#pos     171 : 442
+#ang     -45 : 45
+
+tilt_left:
+#ctl    1000 : 2000     
+#pos     442 : 174
+#ang      45 : -45
+
+pan_right:
+#ctl    1000 : 2000     
+#pos     444 : 172
+#ang      40 : -45
+
+tilt_right:
+#ctl    1000 : 2000     
+#pos     172 : 440
+#ang      50 : -40
+*/
+
+cv::Mat_<float> getT1L(){
+	float deg2rad = PI / 180.;
+
     // Be aware of all rotation direction
-    float q2 = (pt_ctrl.pan_neck - 1500) * PI / 1000;
-    float q3 = (-pt_ctrl.pan_left + 1480) * PI / 1000;
-    float q4 = (-pt_ctrl.tilt_left + 1500) * PI / 1000;
-    printf("q2 = %4.5f, q3 = %4.5f, q4 = %4.5f \n", q2*180./PI, q3*180./PI, q4*180./PI);
+    float q2 = (state_msg->pan_neck_pos - 237.) * 170. / (277. - 192.) * deg2rad;
+	printf("pan_left_pos: %u, tilt_left_pos: %u \n\n", state_msg->pan_left_pos, state_msg->tilt_left_pos);
+    float q3 = ((state_msg->pan_left_pos - 309.) * (45. + 45.)  / (442. - 171.)) * deg2rad;
+    float q4 = ((state_msg->tilt_left_pos - 311.) * (45. + 45.) / (442. - 174.)) * deg2rad;
+    printf("q2 = %4.5f, q3 = %4.5f, q4 = %4.5f \n", q2/deg2rad, q3/deg2rad, q4/deg2rad);
     float theta2 = q2; float theta3 = -PI/2 + q3; float theta4 = q4;
     float s2 = sinf(theta2); float c2 = cosf(theta2);
     float s3 = sinf(theta3); float c3 = cosf(theta3);
@@ -308,7 +344,7 @@ int main(int argc, char **argv)
 
 
                 // Initialize rotation control vector
-                if(counter >= 15) counter = 0;
+                if(counter >= 3) counter = 0;
                 if(counter == 0){
                     // Form the rotation matrix
                     cv::Vec3f eulerAngles = cv::Vec3f((float) pose_WRTcamera[3], (float) pose_WRTcamera[4], (float) pose_WRTcamera[5]); 
@@ -327,8 +363,8 @@ int main(int argc, char **argv)
                     cerr<<"Transformation between face and cam: \n"<<TLH<<endl;
 
                     // Compute the transformation matrix T1L
-                    cv::Mat_<float> T1L = getT1L(pt_ctrl);
-                    //cout<<TLH<<endl;
+                    cv::Mat_<float> T1L = getT1L();
+                    //cout<<T1L<<endl;
 
 
                     cout<<"trans x: "<<pose_WRTcamera[0]<<"  trans y: "<<pose_WRTcamera[1]<<"  trans z: "<<pose_WRTcamera[2]<<endl;

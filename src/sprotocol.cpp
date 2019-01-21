@@ -24,6 +24,7 @@ extern int stop_serial_tx;
 extern int stop_serial_rx;
 
 
+struct h2l_state_pan_tilt* state_msg = (struct h2l_state_pan_tilt*) malloc(sizeof(struct h2l_state_pan_tilt));
 // ---------------- serial -------------------
 
 static int h2l_send_pan_tilt_msg(int sfd, int16_t pan_left, int16_t tilt_left,
@@ -116,28 +117,15 @@ static int h2l_recv_process(int sfd, char serial_buff[]) {
 
 	case OPCODE_STATE_PAN_TILT: {
 
-		struct h2l_state_pan_tilt* msg = (struct h2l_state_pan_tilt *) (serial_buff);
+		state_msg = (struct h2l_state_pan_tilt *) (serial_buff);
+		//printf("[rx] ts = %u \n", state_msg->timestamp);
+		printf("[rx] ts=%u, pan_left_pos=%d, tilt_left_pos=%d, "
+				"pan_right_pos=%d, tilt_right_pos=%d, "
+				"pan_neck_pos=%d, tilt_neck_pos=%d\n",
 
-		// printf("[rx] ts=%u, pan_left=%d, tilt_left=%d, "
-		// 		"pan_right=%d, tilt_right=%d, "
-		// 		"pan_neck=%d, tilt_neck=%d\n",
-
-		// 		msg->timestamp, msg->pan_left, msg->tilt_left,
-		// 		msg->pan_right, msg->tilt_right,
-		// 		msg->pan_neck, msg->tilt_neck);
-
-		std::cout<<"\n[rx] ts="<<msg->timestamp
-				//<<"\n, pan_left_ctl=" <<msg->pan_left
-				//<<"\n tilt_left_ctl=" <<msg->tilt_left
-				//<<"\n pan_right_ctl=" <<msg->pan_right
-				<<"\n tilt_right_ctl="  <<msg->tilt_right
-				//<<"\n, pan_neck_ctl="  <<msg->pan_neck
-				//<<"\n, pan_left_pos="<<msg->pan_left_pos;
-				//<<"\n tilt_left_pos=" <<msg->tilt_left_pos;
-				//<<"\n pan_right_pos=" <<msg->pan_right_pos;
-				<<"\n tilt_right_pos="<<msg->tilt_right_pos;
-				//<<", pan_neck_pos="  <<msg->pan_neck_pos<<"\n";
-			
+				state_msg->timestamp, state_msg->pan_left_pos, state_msg->tilt_left_pos,
+				state_msg->pan_right_pos, state_msg->tilt_right_pos,
+				state_msg->pan_neck_pos, state_msg->tilt_neck_pos);
 
 		break;
 	}

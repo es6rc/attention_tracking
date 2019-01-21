@@ -23,8 +23,6 @@
 
 #include "serial.h"
 #include "sprotocol.h"
-#include "joystick.h"
-#include "visual_servo.h"
 #include "head_neck_ctl.h"
 
 #ifndef CONFIG_DIR
@@ -63,26 +61,31 @@ void vergence_servo_ctrl( float *q ){
 	// double kpneck = 0.005;
 	// double kptilt = 0.02;
 	//double kpvg = 0.02;
-
+    float rad2pwm = 1000./PI;
     float kpneck = 0.09;
-    float kptilt = 0.5;
-    float kpverg = 0.5;
+    float kptilt = 0.01;
+    float kpverg = 0.01;
 	if (!isnan(q[0]) && !isnan(q[1]) && !isnan(q[2])) {
 
-		float out_neck = kpneck * q[0] * 1000 / PI;
-		float out_vg = kpverg * q[1] * 1000 / PI;
-		float out_tilt = kptilt * q[2] * 1000 / PI;
+		float out_neck = kpneck * (1500 + q[0] * rad2pwm - pt_ctrl.pan_neck);
+		float out_vg = kpverg * (1480 - q[1] * rad2pwm - pt_ctrl.pan_left);
+		float out_tilt = kptilt * (1500 - q[2] * rad2pwm - pt_ctrl.tilt_left);
 
 		// CAUTION: Be careful on the servo direction!!!
 
-		pt_ctrl.pan_neck += out_neck;
-        //printf("pan_neck: %d\n", pt_ctrl.pan_neck );
-        pt_ctrl.pan_left -= out_vg;
-        // printf("out_vg: %f\n", out_vg );
-        pt_ctrl.pan_right += out_vg;
-        // printf("pan_right: %d\n", pt_ctrl.pan_right );
-        pt_ctrl.tilt_left -= out_tilt;
-        pt_ctrl.tilt_right -= out_tilt;
+		// pt_ctrl.pan_neck += out_neck;
+        // //printf("pan_neck: %d\n", pt_ctrl.pan_neck );
+        // pt_ctrl.pan_left += out_vg;
+        // // printf("out_vg: %f\n", out_vg );
+        // pt_ctrl.pan_right -= out_vg;
+        // // printf("pan_right: %d\n", pt_ctrl.pan_right );
+        // pt_ctrl.tilt_left += out_tilt;
+        // pt_ctrl.tilt_right += out_tilt;
+        pt_ctrl.pan_neck = 1500 + q[0] * rad2pwm;
+        pt_ctrl.pan_left = 1480 - q[1] * rad2pwm;
+        pt_ctrl.pan_right= 1450 + q[1] * rad2pwm;
+        pt_ctrl.tilt_left= 1500 - q[2] * rad2pwm;
+        pt_ctrl.tilt_right= 1500 - q[2] * rad2pwm;
 
 	}
 }
@@ -96,8 +99,10 @@ cv::Mat_<float> getT1L(pan_tilt_ctrl pt_ctrl){
     float s2 = sinf(theta2); float c2 = cosf(theta2);
     float s3 = sinf(theta3); float c3 = cosf(theta3);
     float s4 = sinf(theta4); float c4 = cosf(theta4);
+    // double angle formula
     float s23 = s2 * c3 + s3 * c2; float c23 = c2 * c3 - s2 * s3;
 
+    // Derived from forward kinematic
     cv::Mat_<float> T1L = (cv::Mat_<float>(4, 4) <<-s23, -c23*s4, -c23*c4, -21.8*c23*c4-44.35*s23-136.91*c2,
                                                     c23, -s23*s4, -s23*c4, -21.8*s23*c4+44.35*c23-136.91*s2,
                                                     0.0, -c4, s4, 21.8*s4+53.5,
@@ -212,13 +217,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	//ret = pthread_create(&js, NULL, joystick_thread, &sfd);
-	if (ret != 0) {
-		fprintf(stderr, "Error - pthread_create() return code: %d\n", ret);
-		exit(EXIT_FAILURE);
-	}
-
-
 
 	// no arguments: output usage
 	if (arguments.size() == 1)
@@ -265,8 +263,7 @@ int main(int argc, char **argv)
 
 		if (sequence_reader.IsWebcam())
 		{
-			INFO_STREAM("WARNING: using a webcam in feature extraction, Action Unit predictions will not be as accurate in real-time webcam mode");
-			INFO_STREAM("WARNING: using a webcam in feature extraction, forcing visualization of tracking to allow quitting the application (press q)");
+			INFO_STREAM("WARNING: using a webcam, forcing visualization of tracking to allow quitting the application (press q)");
 			visualizer.vis_track = true;
 		}
 
@@ -280,6 +277,9 @@ int main(int argc, char **argv)
 
         // Try to hack the control loop: update the reference gaze point at low rate.
         int counter = 0;
+        // Create rotation control quantity vector.
+        float quan[3] = {0., 0., 0.};
+        float *q = quan;
 
 		while (!captured_image.empty()) // && ros::ok())
 		{
@@ -303,14 +303,12 @@ int main(int argc, char **argv)
 			
             cv::Vec6d pose_WRTcamera = LandmarkDetector::GetPoseWRTCamera(face_model, sequence_reader.fx, 
                                         sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
-
+    
             if (detection_success && face_model.eye_model){
 
 
                 // Initialize rotation control vector
-                float quan[3] = {0., 0., 0.};
-                float *q = quan;
-                if(counter==30) counter = 0;
+                if(counter >= 15) counter = 0;
                 if(counter == 0){
                     // Form the rotation matrix
                     cv::Vec3f eulerAngles = cv::Vec3f((float) pose_WRTcamera[3], (float) pose_WRTcamera[4], (float) pose_WRTcamera[5]); 
@@ -338,7 +336,7 @@ int main(int argc, char **argv)
                     
                     // Transformate the gaze point to the camera coordinate
                     // Create gaze point (attention)
-                    cv::Mat_<float> gzpoint = (cv::Mat_<float>(4, 1) << 0.0, 0.0, -100.0, 1);
+                    cv::Mat_<float> gzpoint = (cv::Mat_<float>(4, 1) << 0.0, 0.0, -150.0, 1);
                     cv::Mat_<float> T1H = T1L * TLH;
                     cv::Mat gzWRTwd1 = T1L * TLH * gzpoint;
                     cerr<<"Transformation between world and cam: \n"<<T1L<<endl;

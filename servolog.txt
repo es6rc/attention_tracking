@@ -1,0 +1,24 @@
+pan_neck:
+#ctl    1250 : 1800
+#pos     192 : 277 
+#ang     -80 : 90 
+
+pan_left:
+#ctl    1000 : 2000     
+#pos     442 : 171
+#ang     -40 : 60
+
+tilt_left:
+#ctl    1000 : 2000     
+#pos     442 : 174
+#ang      45 : -45
+
+pan_right:
+#ctl    1000 : 2000     
+#pos     444 : 172
+#ang      40 : -45
+
+tilt_right:
+#ctl    1000 : 2000     
+#pos     172 : 440
+#ang      50 : -40

@@ -30,8 +30,8 @@ struct pan_tilt_ctrl {
 	volatile int16_t tilt_neck;
 
 };
-//extern struct gazepoint gzPoint;
 extern struct pan_tilt_ctrl pt_ctrl;
+extern struct h2l_state_pan_tilt* msg;
 
 static inline uint64_t get_us() {
 

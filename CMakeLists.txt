@@ -43,6 +43,8 @@ INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
 
 #include_directories(/home/z/CppDependencies/OpenFace/install/include/OpenFace)
 add_executable (at main.cpp ${SOURCES})
+add_executable (readservo mainlog.cpp ${SOURCES})
+target_link_libraries(readservo ${OpenFace_LIBRARIES})
 target_link_libraries(at ${OpenFace_LIBRARIES})
 #target_link_libraries(at ${catkin_LIBRARIES})
 target_link_libraries(at ${OpenCV_LIBS} )

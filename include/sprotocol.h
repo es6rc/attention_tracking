@@ -8,6 +8,7 @@
 #ifndef SPROTOCOL_H_
 #define SPROTOCOL_H_
 
+#include<cstdint>
 // ---------------- serial protocol -------------------
 
 #define MC_PROTO_HEADER_SIZE 4
@@ -51,7 +52,7 @@ struct h2l_ctrl_pan_tilt {
 
 };
 
-// message from computer to microcontroller
+// message from microcontroller to computer
 
 struct h2l_state_pan_tilt {
 

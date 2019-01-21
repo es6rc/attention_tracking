@@ -5,7 +5,7 @@
  *      Author: priori
  */
 
-
+#include <iostream>
 #include "stdio.h"
 #include "stdlib.h"
 #include "stdint.h"
@@ -116,16 +116,28 @@ static int h2l_recv_process(int sfd, char serial_buff[]) {
 
 	case OPCODE_STATE_PAN_TILT: {
 
-		struct h2l_state_pan_tilt *msg = (struct h2l_state_pan_tilt *) (serial_buff);
+		struct h2l_state_pan_tilt* msg = (struct h2l_state_pan_tilt *) (serial_buff);
 
-		printf("[rx] ts=%u, pan_left=%d, tilt_left=%d, "
-				"pan_right=%d, tilt_right=%d, "
-				"pan_neck=%d, tilt_neck=%d\n",
+		// printf("[rx] ts=%u, pan_left=%d, tilt_left=%d, "
+		// 		"pan_right=%d, tilt_right=%d, "
+		// 		"pan_neck=%d, tilt_neck=%d\n",
 
-				msg->timestamp, msg->pan_left, msg->tilt_left,
-				msg->pan_right, msg->tilt_right,
-				msg->pan_neck, msg->tilt_neck);
+		// 		msg->timestamp, msg->pan_left, msg->tilt_left,
+		// 		msg->pan_right, msg->tilt_right,
+		// 		msg->pan_neck, msg->tilt_neck);
 
+		std::cout<<"\n[rx] ts="<<msg->timestamp
+				//<<"\n, pan_left_ctl=" <<msg->pan_left
+				//<<"\n tilt_left_ctl=" <<msg->tilt_left
+				//<<"\n pan_right_ctl=" <<msg->pan_right
+				<<"\n tilt_right_ctl="  <<msg->tilt_right
+				//<<"\n, pan_neck_ctl="  <<msg->pan_neck
+				//<<"\n, pan_left_pos="<<msg->pan_left_pos;
+				//<<"\n tilt_left_pos=" <<msg->tilt_left_pos;
+				//<<"\n pan_right_pos=" <<msg->pan_right_pos;
+				<<"\n tilt_right_pos="<<msg->tilt_right_pos;
+				//<<", pan_neck_pos="  <<msg->pan_neck_pos<<"\n";
+			
 
 		break;
 	}

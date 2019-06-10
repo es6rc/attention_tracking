@@ -1,7 +1,5 @@
 #include "LandmarkCoreIncludes.h"
 //#include "ros/ros.h"
-//#include "std_msgs/Int32.h"
-//#include "geometry_msgs/Point.h"
 
 #include <opencv2/sfm.hpp>
 #include <Face_utils.h>
@@ -58,11 +56,7 @@ int period = 100000; // 100 ms
 
 void vergence_servo_ctrl( float *q ){
 	
-	// PID controller
-
-	// double kpneck = 0.005;
-	// double kptilt = 0.02;
-	//double kpvg = 0.02;
+    // PID controller
     float rad2pwm = 1000./PI;
     float kpneck = 0.09;
     float kptilt = 0.01;
@@ -74,15 +68,6 @@ void vergence_servo_ctrl( float *q ){
 		float out_tilt = kptilt * (1500 - q[2] * rad2pwm - pt_ctrl.tilt_left);
 
 		// CAUTION: Be careful on the servo direction!!!
-
-		// pt_ctrl.pan_neck += out_neck;
-        // //printf("pan_neck: %d\n", pt_ctrl.pan_neck );
-        // pt_ctrl.pan_left += out_vg;
-        // // printf("out_vg: %f\n", out_vg );
-        // pt_ctrl.pan_right -= out_vg;
-        // // printf("pan_right: %d\n", pt_ctrl.pan_right );
-        // pt_ctrl.tilt_left += out_tilt;
-        // pt_ctrl.tilt_right += out_tilt;
 		int neck_pan = (int) 1500 + q[0] * rad2pwm;
 		if(neck_pan >= 1600) pt_ctrl.pan_neck = 1600;
 		else if (neck_pan <= 1400) pt_ctrl.pan_neck = 1400;
@@ -398,15 +383,6 @@ int main(int argc, char **argv)
                 vergence_servo_ctrl(q);
                 //printf("q2 = %4.5f, q3 = %4.5f, q4 = %4.5f \n", q[0], q[1], q[2]);
             }
-
-            // std_msgs::Int32 msg_x;
-            // std_msgs::Int32 msg_y;
-            // msg_x.data = (int) gzONimg(0);
-            // msg_y.data = (int) gzONimg(1);
-            // ROS_INFO("%d", msg_x.data);
-            // pub_x.publish(msg_x);
-            // ROS_INFO("%d", msg_y.data);
-            // pub_y.publish(msg_y);
 
 			// Keeping track of FPS
 			fps_tracker.AddFrame();

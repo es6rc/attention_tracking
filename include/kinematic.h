@@ -57,7 +57,7 @@ using namespace Eigen;
  *	|  0	   0		0	 |   1	  |    |0 0 0| 1 |
  *	+-								 -+    +-		-+
  * 	ctn = cos(THETAn) can =cos(ALPHAn) stn = sin(THETAn) san = sin(ALPHAn)
- *怎么样
+ *
  *	T(n-1)->n = 
  *	+-								    -+	   +-	    -+
  *	|   ctn       stn       0  |   -rn   |	   |	 |   |
@@ -133,7 +133,7 @@ Matrix4f RT(float tx, float ty, float tz, float phi, float theta, float psi){
 
 
 float *Inv_Kinematic(float *gzPoint) {
-    /***
+    /*** Explained
     q2 = theta2;
          -PI  <= theta2 <= PI;
     q3 = PI/2 + theta3;
@@ -175,7 +175,8 @@ float *Inv_Kinematic(float *gzPoint) {
     return q;
 }
 
-void AnglesToQaternion(float *q, float roll, float pitch, float yaw) { // Convert Euler angles in degrees to quaternions
+// Convert Euler angles in degrees to quaternions
+void AnglesToQaternion(float *q, float roll, float pitch, float yaw) {
 
     roll  = roll  * DEG_TO_RAD;
     pitch = pitch * DEG_TO_RAD;
@@ -196,7 +197,8 @@ void AnglesToQaternion(float *q, float roll, float pitch, float yaw) { // Conver
     printf(">> q-1: %f %f %f %f \n", q[0], q[1], q[2], q[3]);
 }
 
-float *AnglesToQaternion(float roll, float pitch, float yaw) { // Convert Euler angles in degrees to quaternions
+// Convert Euler angles in degrees to quaternions
+float *AnglesToQaternion(float roll, float pitch, float yaw) { 
 
     float *q = new float[4];
     // Or C-style: float *q = malloc(sizeof(float)*4);

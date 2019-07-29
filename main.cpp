@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 
+// Arduino Communication Settings
 #include "serial.h"
 #include "sprotocol.h"
 #include "head_neck_ctl.h"
@@ -275,7 +276,6 @@ int main(int argc, char **argv)
 	//bool a = true;
 	while (true) // this is not a for loop as we might also be reading from a webcam
 	{
-
 		// The sequence reader chooses what to open based on command line arguments provided
 		if (!sequence_reader.Open(arguments))
 			break;
@@ -290,7 +290,6 @@ int main(int argc, char **argv)
 
 		cv::Mat captured_image;
 
-
 		captured_image = sequence_reader.GetNextFrame();
 
 		INFO_STREAM("Starting tracking");
@@ -304,30 +303,26 @@ int main(int argc, char **argv)
 
 		while (!captured_image.empty()) // && ros::ok())
 		{
-
-			// Converting to grayscale
-			cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
-
-			// The actual facial landmark detection / tracking
-			bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters, grayscale_image);
+            // Converting to grayscale
+            cv::Mat_<uchar> grayscale_image = sequence_reader.GetGrayFrame();
+            // The actual facial landmark detection / tracking
+            bool detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters, grayscale_image);
 			
-			// Gaze tracking, absolute gaze direction
-			//cv::Point3f gazeDirection0(0, 0, 0); cv::Point3f gazeDirection1(0, 0, 0); cv::Vec2d gazeAngle(0, 0);
+            // Gaze tracking, absolute gaze direction
+            //cv::Point3f gazeDirection0(0, 0, 0); cv::Point3f gazeDirection1(0, 0, 0); cv::Vec2d gazeAngle(0, 0);
 
-			// if (detection_success && face_model.eye_model)
-			// {
-			// 	GazeAnalysis::EstimateGaze(face_model, gazeDirection0, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, true);
-			// 	GazeAnalysis::EstimateGaze(face_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
+            // if (detection_success && face_model.eye_model)
+            // {
+            // 	GazeAnalysis::EstimateGaze(face_model, gazeDirection0, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, true);
+            // 	GazeAnalysis::EstimateGaze(face_model, gazeDirection1, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy, false);
 
-			// 	gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
-			// }
+            // 	gazeAngle = GazeAnalysis::GetGazeAngle(gazeDirection0, gazeDirection1);
+            // }
 			
             cv::Vec6d pose_WRTcamera = LandmarkDetector::GetPoseWRTCamera(face_model, sequence_reader.fx, 
                                         sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
     
             if (detection_success && face_model.eye_model){
-
-
                 // Initialize rotation control vector
                 if(counter >= 3) counter = 0;
                 if(counter == 0){
@@ -351,7 +346,6 @@ int main(int argc, char **argv)
                     cv::Mat_<float> T1L = getT1L();
                     //cout<<T1L<<endl;
 
-
                     cout<<"trans x: "<<pose_WRTcamera[0]<<"  trans y: "<<pose_WRTcamera[1]<<"  trans z: "<<pose_WRTcamera[2]<<endl;
                     //cout<<"euler x: "<<pose_WRTcamera[3]<<"  euler y: "<<pose_WRTcamera[4]<<"  euler z: "<<pose_WRTcamera[5]<<endl;
                     
@@ -366,10 +360,13 @@ int main(int argc, char **argv)
                     cv::Mat_<float> gzWRTwd;
                     gzWRTwd1(rect).copyTo(gzWRTwd);
                     cv::transpose(gzWRTwd, gzWRTwd);
+
+                    //! Control with disparity On image plane
                     //cout<<gzWRTwd<<endl;
                     // Project the gaze point to image plane;
                     //cv::Mat_<float> gzONimg;
-                    //Pjt(gzONimg, gzWRTcamera, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+                    //Pjt(gzONimg, gzWRTcamera, sequence_reader.fx, 
+                    //    sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
                     //cout<<gzONimg<<endl;
 
                     float gzPoint[3] = {gzWRTwd(0), gzWRTwd(1), gzWRTwd(2)};
@@ -381,50 +378,43 @@ int main(int argc, char **argv)
                     cerr<<"quantity of rotations--q2: "<<q[0]*180/PI<<", q3: "<<q[1]*180/PI<<", q4: "<<q[2]*180/PI<<endl;
                 }
                 vergence_servo_ctrl(q);
+                // Print out generated joint value
                 //printf("q2 = %4.5f, q3 = %4.5f, q4 = %4.5f \n", q[0], q[1], q[2]);
             }
 
-			// Keeping track of FPS
-			fps_tracker.AddFrame();
+            // Keeping track of FPS
+            fps_tracker.AddFrame();
 
-			// Displaying the tracking visualizations
-			visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+            // Displaying the tracking visualizations
+            visualizer.SetImage(captured_image, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy);
+            visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.GetVisibilities());
+            visualizer.SetObservationPose(pose_WRTcamera, face_model.detection_certainty);
+            //visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
+            visualizer.SetFps(fps_tracker.GetFPS());
 
-			visualizer.SetObservationLandmarks(face_model.detected_landmarks, face_model.detection_certainty, face_model.GetVisibilities());
-			visualizer.SetObservationPose(pose_WRTcamera, face_model.detection_certainty);
-			//visualizer.SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(face_model), LandmarkDetector::Calculate3DEyeLandmarks(face_model, sequence_reader.fx, sequence_reader.fy, sequence_reader.cx, sequence_reader.cy), face_model.detection_certainty);
-			visualizer.SetFps(fps_tracker.GetFPS());
-
-			// detect key presses
-			char character_press = visualizer.ShowObservation();
+            // detect key presses
+            char character_press = visualizer.ShowObservation();
 			
-			// quit processing the current sequence (useful when in Webcam mode)
-			if (character_press == 'q')
-			{
-				break;
-			}
+            // quit processing the current sequence (useful when in Webcam mode)
+            if (character_press == 'q')
+            {break;}
 
-			// Grabbing the next frame in the sequence
-			captured_image = sequence_reader.GetNextFrame();
+            // Grabbing the next frame in the sequence
+            captured_image = sequence_reader.GetNextFrame();
             // Set counter
             counter++;
-			//ros::spinOnce();
-			//loop_rate.sleep();
-		}
+            //ros::spinOnce();
+            //loop_rate.sleep();
+        }	
+    	INFO_STREAM("Closing input reader");
+    	sequence_reader.Close();
+    	INFO_STREAM("Closed successfully");
 
-		
-		INFO_STREAM("Closing input reader");
-		sequence_reader.Close();
-		INFO_STREAM("Closed successfully");
-
-
-
-		// Reset the models for the next video
-		// face_analyser.Reset();
-		face_model.Reset();
-
-	}
-    pthread_join(tx_serial, NULL);
+    	// Reset the models for the next video
+    	// face_analyser.Reset();
+    	face_model.Reset();
+    }
+	pthread_join(tx_serial, NULL);
 	pthread_join(rx_serial, NULL);
-	return 0;
+    return 0;
 }

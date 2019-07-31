@@ -27,7 +27,7 @@ using namespace Eigen;
  *
  *	* * * * * * * * * *PARAMETERS VALUEs * * * * * * * * * *
  *	 * * * gazebo simulation model kinematic
- *                                                           theta_n are notationed as "q_n" in inverse kinematic computation
+ *   theta_n are notationed as "q_n" in inverse kinematic computation
  *	|  +theta2   |	  var	 | |	alpha2	 |	   0	 |
  *	|     d2     |	   0	 | |     -r2     |   -var	 |
  *
@@ -163,7 +163,6 @@ float *Inv_Kinematic(float *gzPoint) {
     float a = -gzPoint[0] * c2 - gzPoint[1] * s2 - 136.91;
     float b = -gzPoint[0] * s2 + gzPoint[1] * c2;
     if (a == 0) exit (EXIT_FAILURE);
-    //printf("a = %f, b = %f\n", a, b);
     float theta3 = asinf(44.35/ sqrtf(pow(a, 2) + pow(b, 2)) ) - atanf(b / a) - PI;
     q[1] = PI / 2 + theta3;
 
@@ -202,7 +201,6 @@ float *AnglesToQaternion(float roll, float pitch, float yaw) {
 
     float *q = new float[4];
     // Or C-style: float *q = malloc(sizeof(float)*4);
-
     roll  = roll  * DEG_TO_RAD;
     pitch = pitch * DEG_TO_RAD;
     yaw   = yaw   * DEG_TO_RAD;
@@ -223,10 +221,3 @@ float *AnglesToQaternion(float roll, float pitch, float yaw) {
 
     return q;
 }
-
-
-// int main() {
-//     float q[4];
-//     AnglesToQaternion(&q[0], 0, 30.0, 0); 
-//     printf(">> q-2: %f %f %f %f \n", q[0], q[1], q[2], q[3]);
-// }

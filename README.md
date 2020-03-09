@@ -5,7 +5,7 @@ The attention tracking function is achieved by utilizing OpenFace( https://githu
 serial and sprotocol related files are created by Duo (https://www.linkedin.com/in/duoluthedeveloper/, who is a Ph.D. student in CIDSE, ASU).
 
 ## SLAM integration with this robot
-[link](https://drive.google.com/file/d/15VmiCW4gPtd-6WlYr_BXCV6NB2WqC5RL/view?usp=sharing) to the post
+[link](https://github.com/es6rc/attention_tracking/blob/master/Demo/MORE-Demo.pdf) to the post
 ## Install
 
 ### Prerequisite
